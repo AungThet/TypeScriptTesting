@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SelectBox</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        #search_month{
+            width: 200px;
+            height: 200px;
+            background: yellow;
+        }
+    </style>
+</head>
+<body>
+    <div id="search_month" name="month" >
+    </div>
+    <input type="text" id="key">
+</body>
+<script   src="https://code.jquery.com/jquery-3.1.0.min.js"   integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s="   crossorigin="anonymous"></script>
+<script src="require.js" data-main="bundle.js"></script>
+<script>
+$(document).ready(function(){
+    var ele = document.getElementById('search_month');
+    var key = document.getElementById('key');
+    console.log(key);
+    var create = new SelectBox.Create({
+        data :  [{"key":1,"value":"Januray"},{"key":2,"value":"Febuary"},{"key":3,"value":"March"},{"key":4,"value":"April"},{"key":5,"value":"May"},{"key":6,"value":"June"},{"key":7,"value":"July"},{"key":8,"value":"August"},{"key":9,"value":"September"},{"key":10,"value":"October"},{"key":11,"value":"November"},{"key":12,"value":"December"}],
+        container  : key,
+        name : "test",
+        key : "key",
+        value : "value"
+    });
+    console.log(create);
+});
+</script>
+</html>

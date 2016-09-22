@@ -22,28 +22,24 @@ gulp.task("copyCss",function(){
 	.pipe(gulp.dest("dist/css"));
 });
 
-var browserifed = browserify({
-	basedir : '.',
+var watchedBrowserify = watchify(browserify({
+	basedir : ".",
 	debug : true,
-	entries : ['src/main.ts'],
+	entries : ["src/main.ts"],
 	cache : {},
 	packageCache : {}
 })
-.plugin(compiler);
-
-var watchedBrowserify = watchify(browserifed);
+.plugin(compiler));
 
 var bundled = function(){
 	return watchedBrowserify
-			.bundle()
-			.pipe(source('bundle.js'))
-			.pipe(buffer())
-			.pipe(sourcemaps.init({loadMaps: true}))
-			.pipe(uglify())
-			.pipe(sourcemaps.write("./"))
-			.pipe(gulp.dest("dist"));
+	.bundle()
+	.pipe(source('bundle.js'))
+	.pipe(buffer())
+	.pipe(sourcemaps.init({loadMaps: true}))
+	.pipe(sourcemaps.write('./'))
+	.pipe(gulp.dest('dist'));
 };
-
 
 gulp.task("default",["copyHTML", "copyCss"], bundled);
 watchedBrowserify.on("update", bundled );
