@@ -10,7 +10,7 @@ module SelectBox{
         name : string;
         selected_value : HTMLElement;
         select_combo : HTMLElement;
-        virtialSelect : HTMLElement;
+        virtualSelect : HTMLElement;
         decorator : HTMLElement;
         attributes? : JSON;
         container : HTMLElement;
@@ -115,7 +115,6 @@ module SelectBox{
             return ele[0];
         };
         optionClickAction = (e : JQueryEventObject) : any => {
-            console.log("click");
             let index = $(e.currentTarget).index();
             let eleGotFromListByIndex = this.getOptionByIndex(index);
             let key = $(e.currentTarget).attr('key'); 
@@ -123,7 +122,6 @@ module SelectBox{
 
             if(eleGotFromListByKey.length>0){
                 if(eleGotFromListByIndex == eleGotFromListByKey[0]){
-                    console.log(index);
                     this.setActiveOption(index);
                 }
                 else{
@@ -148,7 +146,7 @@ module SelectBox{
             if(this.optionKeyBinder.attributes){
                 $(htmlSelect).attr(this.optionKeyBinder.attributes);
             }
-            this.optionKeyBinder.virtialSelect = htmlSelect;
+            this.optionKeyBinder.virtualSelect = htmlSelect;
 
             let select_combo = document.createElement('ul');
             let selected_value   = document.createElement('div');
@@ -168,12 +166,12 @@ module SelectBox{
             this.optionKeyBinder.container.appendChild(this.optionKeyBinder.decorator);
 
             this.optionKeyBinder.container.appendChild(this.optionKeyBinder.select_combo);
+            this.optionKeyBinder.container.appendChild(this.optionKeyBinder.virtualSelect);
 
             this.optionKeyBinder.container.setAttribute('tabindex', '0');
 
         };
         bindOption = () => {
-            console.log(this.optionKeyBinder.select_combo);
             this.optionKeyBinder.select_combo.innerText = '';
             for( let ele  of this.optionList ) {
                 var el = $(ele);
@@ -186,9 +184,9 @@ module SelectBox{
             let select_combo = $(this.optionKeyBinder.select_combo);
             let active = select_combo.find('.active');
             if(active){
-                var y = active.height()*active.index();
-                console.log(active);
-                select_combo.scrollTop($(active).position().top);
+                console.log("scroll");
+                var y = active.offset().top - select_combo.offset().top;
+                select_combo.scrollTop($(active).position().top + select_combo.scrollTop());
             }
         };
         getOptionByIndex = (index : number) : HTMLElement => {
@@ -235,9 +233,10 @@ module SelectBox{
         };
         valueRefresh = () : any => {
             let active = this.getActiveOption();
-            let option = $('<option>',{key : $(active).attr('key')});
+            let option = $('<option>',{value : $(active).attr('key'), selected : 'selected'});
             option.text($(active).text());
-            this.optionKeyBinder.virtialSelect.appendChild(option[0]);
+            this.optionKeyBinder.virtualSelect.innerHTML = '';
+            this.optionKeyBinder.virtualSelect.appendChild(option[0]);
             let value = document.createElement('div');
             value.className = 'value';
             value.innerText = active.innerText;
@@ -248,12 +247,12 @@ module SelectBox{
             this.scrollToActiveOption();
         };
         containerKeyUpAction = (e : KeyboardEvent) => {      
-        console.log("key press");                                
-            var keyCode = e.keyCode;
+
+            var keyCode = e.which;
             if (keyCode == 13) 
                     {     // enter
-                        this.scrollToActiveOption();
                         $(this.optionKeyBinder.select_combo).toggle();
+                        this.scrollToActiveOption();
                     }
                     else if (keyCode == 38)
                        { // up key
@@ -265,44 +264,46 @@ module SelectBox{
                    }
                    else
                    {    
-                           console.log("char");
-                               this.keySet.pushKey(e.which);
+                       if(/^[a-z0-9]+$/i.test(String.fromCharCode(keyCode))){
+
+                           this.keySet.pushKey(e.which);
                                var result = this.searchKeyWord(this.keySet.getKeyList(), this.dataSource.data); // ( string[] , Option[])
                                if(result){
-                                   var ele = this.getOptionByObj(result);
+                                   this.setActiveOption(this.dataSource.data.findIndex((object) => {return object == result;}));
                                }
                                else{
                                    console.log("not change");
                                }
+                           }
+                       }
                    }
-               }
-               searchKeyWord = (keyList : string[], dataList : any[]) : OptionJson => {
+                   searchKeyWord = (keyList : string[], dataList : any[]) : OptionJson => {
 
-                   for( let obj  of dataList){
+                       for( let obj  of dataList){
 
-                       var value = obj[this.optionKeyBinder.value].toString().split('');
-                       
-                       if(value.length > 0){
-                           var searchPointer = 0;
-                           for(var i =0;i<value.length;i++){
-                               if(value[i].toLowerCase() === keyList[searchPointer].toLowerCase()){
-                                   searchPointer++;
-                                   if(searchPointer == keyList.length){
-                                       this.setActiveOption(this.dataSource.data.findIndex((object) => {return object == obj;}));
-                                       return obj;
+                           var value = obj[this.optionKeyBinder.value].toString().split('');
+
+                           if(value.length > 0){
+                               var searchPointer = 0;
+                               for(var i =0;i<value.length;i++){
+                                   if(value[i].toLowerCase() === keyList[searchPointer].toLowerCase()){
+
+                                       searchPointer++;
+                                       if(searchPointer == keyList.length){
+                                           return obj;
+                                       }
                                    }
                                }
                            }
                        }
                    }
-               }
-               containerClickAction = (e : KeyboardEvent) => {
-                   $(this.optionKeyBinder.select_combo).toggle();
-               };
+                   containerClickAction = (e : KeyboardEvent) => {
+                       $(this.optionKeyBinder.select_combo).toggle();
+                   };
 
-               constructor(parameter : JsonObject){
-                   this.dataSource = new DataSource(parameter.data);
-                   this.keySet = new keyGenerator();
+                   constructor(parameter : JsonObject){
+                    this.dataSource = new DataSource(parameter.data);
+                    this.keySet = new keyGenerator();
                     this.optionKeyBinder = parameter; // optionElement = JsonObject;
                     this.createOptionList(parameter.data); //  createElementList(OptionJson[]);
                     this.refresh();
@@ -335,7 +336,7 @@ module SelectBox{
                     this.timer = setTimeout(() => {
                         console.log("reset");
                         this.resetKey();
-                    }, 1000);
+                    }, 800);
                 };
             }
 
@@ -345,8 +346,7 @@ module SelectBox{
 
                 constructor(parameter : JsonObject){
                     this.elementSource = new ElementSource(parameter); // ElementSource(JsonObject)
-                    console.log(this.elementSource);
                 }
-    }
+            }
 
-}
+        }
